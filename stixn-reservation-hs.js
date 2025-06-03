@@ -1,9 +1,5 @@
 // STIXN to HubSpot Integration Script
 (function() {
-    // Clear localStorage at start
-    localStorage.removeItem('selectedActivities');
-    localStorage.removeItem('userEmail');
-
     // Configuration
     const config = {
         proxyEndpoint: 'https://stixn-express-api.onrender.com/api/hubspot'
@@ -57,11 +53,14 @@
     // Handle checkbox changes
     function handleCheckboxChange(event) {
         const selectedActivities = collectSelectedActivities();
-        console.log('=== CHECKBOX CLICKED ===');
-        console.log('Selected activities:', selectedActivities);
         
         // Store in localStorage
         localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
+        
+        // Log ALL localStorage contents
+        console.log('=== LOCALSTORAGE CONTENTS ===');
+        console.log('selectedActivities:', JSON.parse(localStorage.getItem('selectedActivities') || '[]'));
+        console.log('userEmail:', localStorage.getItem('userEmail'));
         
         // If we have an email, update HubSpot with 'Nee'
         const email = localStorage.getItem('userEmail');
