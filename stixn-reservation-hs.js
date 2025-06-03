@@ -11,24 +11,11 @@
 
     // Initialize the script
     function init() {
-        // Wait for DOM to be fully loaded
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', setupEventListeners);
         } else {
             setupEventListeners();
         }
-
-        // Set up a MutationObserver to watch for dynamically added checkboxes
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.addedNodes.length) {
-                    setupEventListeners();
-                }
-            });
-        });
-
-        // Start observing the document with the configured parameters
-        observer.observe(document.body, { childList: true, subtree: true });
     }
 
     // Set up event listeners for form elements
@@ -38,15 +25,7 @@
         
         const checkboxes = document.querySelectorAll('.js-filter');
         console.log('Found checkboxes:', checkboxes.length);
-        
-        // Remove existing listeners to prevent duplicates
-        checkboxes.forEach(checkbox => {
-            const newCheckbox = checkbox.cloneNode(true);
-            checkbox.parentNode.replaceChild(newCheckbox, checkbox);
-        });
-
-        // Add listeners to all checkboxes
-        document.querySelectorAll('.js-filter').forEach((checkbox, index) => {
+        checkboxes.forEach((checkbox, index) => {
             console.log(`Checkbox ${index}:`, {
                 id: checkbox.id,
                 value: checkbox.value,
@@ -54,8 +33,6 @@
                 label: checkbox.nextElementSibling?.textContent,
                 labelElement: checkbox.nextElementSibling
             });
-
-            checkbox.addEventListener('change', handleCheckboxChange);
         });
 
         const emailField = document.getElementById('reservation_customer_form_email');
@@ -71,6 +48,11 @@
             console.log('Submit button classes:', submitButton.className);
             submitButton.addEventListener('click', handleSubmit);
         }
+
+        // Set up checkbox listeners
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', handleCheckboxChange);
+        });
     }
 
     // Handle checkbox changes
