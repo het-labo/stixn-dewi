@@ -56,21 +56,17 @@
 
     // Handle checkbox changes
     function handleCheckboxChange(event) {
-        console.log('Checkbox changed:', {
-            id: event.target.id,
-            value: event.target.value,
-            checked: event.target.checked,
-            label: document.querySelector(`label[for="${event.target.id}"]`)?.textContent
-        });
-
-        // Store selected activities in localStorage
         const selectedActivities = collectSelectedActivities();
+        console.log('=== CHECKBOX CLICKED ===');
+        console.log('Selected activities:', selectedActivities);
+        
+        // Store in localStorage
         localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
         
-        // If we have an email, update HubSpot
+        // If we have an email, update HubSpot with 'Nee'
         const email = localStorage.getItem('userEmail');
         if (email) {
-            updateHubSpotWithStoredData();
+            updateHubSpotWithStoredData(false);
         }
     }
 
@@ -78,9 +74,12 @@
     async function handleEmailChange(event) {
         const email = event.target.value;
         if (email) {
+            console.log('=== EMAIL ENTERED ===');
+            console.log('Email:', email);
+            
             localStorage.setItem('userEmail', email);
-            // Update HubSpot with stored data when email is entered
-            await updateHubSpotWithStoredData();
+            // Update HubSpot with stored data and 'Nee' status
+            await updateHubSpotWithStoredData(false);
         }
     }
 
@@ -97,16 +96,21 @@
     }
 
     // Update HubSpot with stored data
-    async function updateHubSpotWithStoredData() {
+    async function updateHubSpotWithStoredData(isFinal) {
         const email = localStorage.getItem('userEmail');
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+        
+        console.log('=== UPDATING HUBSPOT ===');
+        console.log('Email:', email);
+        console.log('Activities:', storedActivities);
+        console.log('Is final submission:', isFinal);
         
         if (email && storedActivities.length > 0) {
             try {
                 await updateHubSpotContact({
                     email: email,
                     activities: storedActivities
-                }, false);
+                }, isFinal);
             } catch (error) {
                 console.error('Error updating HubSpot:', error);
             }
@@ -115,16 +119,11 @@
 
     // Handle form submission
     async function handleSubmit(event) {
-        console.log('=== SUBMIT DEBUG ===');
-        console.log('Submit button clicked');
-        console.log('Button element:', event.target);
+        console.log('=== FINAL SUBMIT ===');
         console.log('Button classes:', event.target.className);
         
         const email = localStorage.getItem('userEmail');
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
-        
-        console.log('Stored email:', email);
-        console.log('Stored activities:', storedActivities);
         
         if (!email) {
             console.log('No email found, returning');
@@ -134,15 +133,10 @@
         // Check if the button has btn--next class
         const isNextButton = event.target.classList.contains('btn--next');
         console.log('Is next button:', isNextButton);
-        console.log('Will set reservatie_voltooid to:', !isNextButton ? 'Ja' : 'Nee');
 
         try {
-            // Only set reservatie_voltooid to true if it's not a next button
-            await updateHubSpotContact({
-                email: email,
-                activities: storedActivities
-            }, !isNextButton);
-            console.log('HubSpot update completed with reservatie_voltooid:', !isNextButton ? 'Ja' : 'Nee');
+            // Update HubSpot with final status
+            await updateHubSpotWithStoredData(!isNextButton);
             
             // Clear localStorage after successful submission
             localStorage.removeItem('selectedActivities');
@@ -153,28 +147,28 @@
     }
 
     // Update HubSpot contact
-    async function updateHubSpotContact(formData, reservatieStatus) {
-        console.log('=== HUBSPOT UPDATE DEBUG ===');
-        console.log('Status being sent:', reservatieStatus);
-        console.log('Raw form data:', formData);
+    async function updateHubSpotContact(formData, isFinal) {
+        console.log('=== SENDING TO HUBSPOT ===');
+        console.log('Is final submission:', isFinal);
+        console.log('Form data:', formData);
         
-        // Format activities as a simple string, ensuring no extra spaces
+        // Format activities as a simple string
         const activitiesString = formData.activities
             .map(a => a.name.trim())
-            .filter(name => name) // Remove any empty strings
+            .filter(name => name)
             .join(', ');
             
-        console.log('Activities string being sent:', activitiesString);
+        console.log('Activities string:', activitiesString);
         
         const contactData = {
             properties: {
                 email: formData.email,
-                gekozen_activiteit: activitiesString || '', // All lowercase to match HubSpot
-                reservatie_voltooid: reservatieStatus ? 'Ja' : 'Nee'
+                gekozen_activiteit: activitiesString || '',
+                reservatie_voltooid: isFinal ? 'Ja' : 'Nee'
             }
         };
 
-        console.log('Full contact data being sent to HubSpot:', JSON.stringify(contactData, null, 2));
+        console.log('Contact data being sent:', contactData);
 
         try {
             const response = await fetch(`${config.proxyEndpoint}/contact`, {
@@ -186,23 +180,13 @@
             });
 
             const responseText = await response.text();
-            console.log('Raw HubSpot response:', responseText);
+            console.log('HubSpot response:', responseText);
 
             if (!response.ok) {
-                console.error('HubSpot API Error Response:', responseText);
                 throw new Error(`Failed to update contact: ${response.status} - ${responseText}`);
             }
 
-            let responseData;
-            try {
-                responseData = JSON.parse(responseText);
-                console.log('Parsed HubSpot response:', responseData);
-            } catch (e) {
-                console.error('Error parsing HubSpot response:', e);
-                throw new Error('Invalid JSON response from HubSpot');
-            }
-
-            return responseData;
+            return JSON.parse(responseText);
         } catch (error) {
             console.error('Error in updateHubSpotContact:', error);
             throw error;
