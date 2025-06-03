@@ -40,7 +40,7 @@
         }
 
         // Monitor submit button
-        const submitButton = document.querySelector('.js-finalize');
+        const submitButton = document.querySelector('.js-pressFinalize');
         if (submitButton) {
             submitButton.addEventListener('click', handleSubmit);
         }
@@ -75,10 +75,10 @@
         const selectedActivities = Array.from(document.querySelectorAll('.js-filter:checked'))
             .map(checkbox => ({
                 id: checkbox.value,
-                name: checkbox.nextElementSibling.textContent
+                name: checkbox.nextElementSibling.textContent.trim() // Trim any whitespace
             }));
 
-        console.log('Selected Activities:', selectedActivities);
+        console.log('Raw selected activities:', selectedActivities);
 
         const email = document.getElementById('reservation_customer_form_email')?.value || '';
 
@@ -108,40 +108,57 @@
 
     // Update HubSpot contact
     async function updateHubSpotContact(formData, reservatieStatus) {
-        console.log('Form Data being sent to HubSpot:', formData);
-        console.log('Activities being sent:', formData.activities);
+        console.log('Raw form data:', formData);
         
-        // Format activities as a simple string
-        const activitiesString = formData.activities.map(a => a.name).join(', ');
-        console.log('Formatted activities string:', activitiesString);
+        // Format activities as a simple string, ensuring no extra spaces
+        const activitiesString = formData.activities
+            .map(a => a.name.trim())
+            .filter(name => name) // Remove any empty strings
+            .join(', ');
+            
+        console.log('Activities string being sent:', activitiesString);
         
         const contactData = {
             properties: {
                 email: formData.email,
-                gekozen_activiteit: activitiesString,
+                gekozen_activiteit: activitiesString || '', // Ensure we never send undefined
                 reservatie_voltooid: reservatieStatus
             }
         };
 
-        console.log('Final contact data being sent:', JSON.stringify(contactData, null, 2));
+        console.log('Full contact data being sent to HubSpot:', JSON.stringify(contactData, null, 2));
 
-        const response = await fetch(`${config.proxyEndpoint}/contact`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(contactData)
-        });
+        try {
+            const response = await fetch(`${config.proxyEndpoint}/contact`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(contactData)
+            });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('HubSpot API Error Response:', errorText);
-            throw new Error(`Failed to update contact: ${response.status} - ${errorText}`);
+            const responseText = await response.text();
+            console.log('Raw HubSpot response:', responseText);
+
+            if (!response.ok) {
+                console.error('HubSpot API Error Response:', responseText);
+                throw new Error(`Failed to update contact: ${response.status} - ${responseText}`);
+            }
+
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+                console.log('Parsed HubSpot response:', responseData);
+            } catch (e) {
+                console.error('Error parsing HubSpot response:', e);
+                throw new Error('Invalid JSON response from HubSpot');
+            }
+
+            return responseData;
+        } catch (error) {
+            console.error('Error in updateHubSpotContact:', error);
+            throw error;
         }
-
-        const responseData = await response.json();
-        console.log('HubSpot API Success Response:', responseData);
-        return responseData;
     }
 
     // Start the script
