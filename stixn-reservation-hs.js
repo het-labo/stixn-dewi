@@ -115,12 +115,16 @@
 
     // Handle form submission
     async function handleSubmit(event) {
+        console.log('=== SUBMIT DEBUG ===');
         console.log('Submit button clicked');
         console.log('Button element:', event.target);
         console.log('Button classes:', event.target.className);
         
         const email = localStorage.getItem('userEmail');
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+        
+        console.log('Stored email:', email);
+        console.log('Stored activities:', storedActivities);
         
         if (!email) {
             console.log('No email found, returning');
@@ -130,7 +134,7 @@
         // Check if the button has btn--next class
         const isNextButton = event.target.classList.contains('btn--next');
         console.log('Is next button:', isNextButton);
-        console.log('Will set reservatie_voltooid to:', !isNextButton);
+        console.log('Will set reservatie_voltooid to:', !isNextButton ? 'Ja' : 'Nee');
 
         try {
             // Only set reservatie_voltooid to true if it's not a next button
@@ -138,7 +142,7 @@
                 email: email,
                 activities: storedActivities
             }, !isNextButton);
-            console.log('HubSpot update completed with reservatie_voltooid:', !isNextButton);
+            console.log('HubSpot update completed with reservatie_voltooid:', !isNextButton ? 'Ja' : 'Nee');
             
             // Clear localStorage after successful submission
             localStorage.removeItem('selectedActivities');
@@ -150,7 +154,8 @@
 
     // Update HubSpot contact
     async function updateHubSpotContact(formData, reservatieStatus) {
-        console.log('Updating HubSpot contact with status:', reservatieStatus);
+        console.log('=== HUBSPOT UPDATE DEBUG ===');
+        console.log('Status being sent:', reservatieStatus);
         console.log('Raw form data:', formData);
         
         // Format activities as a simple string, ensuring no extra spaces
@@ -164,8 +169,8 @@
         const contactData = {
             properties: {
                 email: formData.email,
-                gekozen_activiteit: activitiesString || '', // Ensure we never send undefined
-                reservatie_voltooid: reservatieStatus
+                gekozen_activiteit: activitiesString || '', // All lowercase to match HubSpot
+                reservatie_voltooid: reservatieStatus ? 'Ja' : 'Nee'
             }
         };
 
