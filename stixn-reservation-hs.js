@@ -1,5 +1,9 @@
 // STIXN to HubSpot Integration Script
 (function() {
+    // Clear localStorage at start
+    localStorage.removeItem('selectedActivities');
+    localStorage.removeItem('userEmail');
+
     // Configuration
     const config = {
         proxyEndpoint: 'https://stixn-express-api.onrender.com/api/hubspot'
@@ -96,8 +100,13 @@
             return;
         }
 
+        // Check if the button has btn--next class
+        const isNextButton = event.target.classList.contains('btn--next');
+        console.log('Is next button:', isNextButton);
+
         try {
-            await updateHubSpotContact(formData, true);
+            // Only set reservatie_voltooid to true if it's not a next button
+            await updateHubSpotContact(formData, !isNextButton);
             // Clear localStorage after successful submission
             localStorage.removeItem('selectedActivities');
             localStorage.removeItem('userEmail');
