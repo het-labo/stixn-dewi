@@ -2,7 +2,7 @@
 (function() {
     // Configuration
     const config = {
-        proxyEndpoint: 'https://stixn-hubspot-proxy.onrender.com/api/hubspot'
+        proxyEndpoint: 'https://stixn-express-api.onrender.com/api/hubspot'
     };
 
     // Initialize the script
