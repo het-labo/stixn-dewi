@@ -21,12 +21,22 @@
         const checkboxes = document.querySelectorAll('.js-filter');
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', handleCheckboxChange);
+            // Restore checkbox state from localStorage
+            const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+            if (storedActivities.some(activity => activity.id === checkbox.value)) {
+                checkbox.checked = true;
+            }
         });
 
         // Monitor email field
         const emailField = document.getElementById('reservation_customer_form_email');
         if (emailField) {
             emailField.addEventListener('input', handleFormChange);
+            // Restore email from localStorage
+            const storedEmail = localStorage.getItem('userEmail');
+            if (storedEmail) {
+                emailField.value = storedEmail;
+            }
         }
 
         // Monitor submit button
@@ -39,6 +49,9 @@
     // Handle checkbox changes
     async function handleCheckboxChange(event) {
         const formData = collectFormData();
+        // Store selected activities in localStorage
+        localStorage.setItem('selectedActivities', JSON.stringify(formData.activities));
+        
         if (formData.email) {
             try {
                 await updateHubSpotContact(formData, false);
@@ -50,7 +63,11 @@
 
     // Handle form changes
     function handleFormChange() {
-        collectFormData();
+        const formData = collectFormData();
+        // Store email in localStorage
+        if (formData.email) {
+            localStorage.setItem('userEmail', formData.email);
+        }
     }
 
     // Collect form data
@@ -79,10 +96,11 @@
 
         try {
             await updateHubSpotContact(formData, true);
-            // Don't prevent default - let the form continue its normal submission
+            // Clear localStorage after successful submission
+            localStorage.removeItem('selectedActivities');
+            localStorage.removeItem('userEmail');
         } catch (error) {
             console.error('Error submitting to HubSpot:', error);
-            // Even if HubSpot update fails, let the form continue
         }
     }
 
