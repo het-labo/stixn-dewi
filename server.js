@@ -8,10 +8,16 @@ const app = express();
 
 // Enable CORS for your frontend domain
 app.use(cors({
-    origin: ['https://het-labo.be', 'https://vrbase.dewi-online.nl/'],
-    methods: ['POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type']
+    origin: ['https://het-labo.be', 'https://vrbase.dewi-online.nl'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 app.use(express.json());
 
