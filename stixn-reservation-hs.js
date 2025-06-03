@@ -92,9 +92,11 @@
     function collectFormData() {
         const selectedActivities = Array.from(document.querySelectorAll('.js-filter:checked'))
             .map(checkbox => {
+                // Find the label that corresponds to this checkbox
+                const label = document.querySelector(`label[for="${checkbox.id}"]`);
                 const activity = {
                     id: checkbox.value,
-                    name: checkbox.nextElementSibling?.textContent?.trim() || ''
+                    name: label ? label.textContent.trim() : ''
                 };
                 console.log('Processing activity:', activity);
                 return activity;
