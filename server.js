@@ -8,7 +8,7 @@ const app = express();
 
 // Enable CORS for your frontend domain
 app.use(cors({
-    origin: ['https://het-labo.be', 'http://localhost:3000'],
+    origin: ['https://het-labo.be', 'https://vrbase.dewi-online.nl/'],
     methods: ['POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type']
 }));
