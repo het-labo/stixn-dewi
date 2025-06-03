@@ -111,15 +111,19 @@
         console.log('Form Data being sent to HubSpot:', formData);
         console.log('Activities being sent:', formData.activities);
         
+        // Format activities as a simple string
+        const activitiesString = formData.activities.map(a => a.name).join(', ');
+        console.log('Formatted activities string:', activitiesString);
+        
         const contactData = {
             properties: {
                 email: formData.email,
-                gekozen_activiteit: formData.activities.map(a => a.name).join(', '),
+                gekozen_activiteit: activitiesString,
                 reservatie_voltooid: reservatieStatus
             }
         };
 
-        console.log('Final contact data being sent:', contactData);
+        console.log('Final contact data being sent:', JSON.stringify(contactData, null, 2));
 
         const response = await fetch(`${config.proxyEndpoint}/contact`, {
             method: 'POST',
@@ -130,10 +134,14 @@
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to update contact: ${response.status}`);
+            const errorText = await response.text();
+            console.error('HubSpot API Error Response:', errorText);
+            throw new Error(`Failed to update contact: ${response.status} - ${errorText}`);
         }
 
-        return await response.json();
+        const responseData = await response.json();
+        console.log('HubSpot API Success Response:', responseData);
+        return responseData;
     }
 
     // Start the script
