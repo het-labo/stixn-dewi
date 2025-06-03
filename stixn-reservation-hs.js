@@ -71,8 +71,6 @@
 
     // Handle form submission
     async function handleSubmit(event) {
-        event.preventDefault();
-        
         const formData = collectFormData();
         
         if (!formData.email) {
@@ -81,8 +79,10 @@
 
         try {
             await updateHubSpotContact(formData, true);
+            // Don't prevent default - let the form continue its normal submission
         } catch (error) {
             console.error('Error submitting to HubSpot:', error);
+            // Even if HubSpot update fails, let the form continue
         }
     }
 

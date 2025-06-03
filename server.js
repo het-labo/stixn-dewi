@@ -32,6 +32,12 @@ app.get('/', (req, res) => {
 // Proxy endpoint for contact creation/update
 app.post('/api/hubspot/contact', async (req, res) => {
     try {
+        console.log('Received request body:', JSON.stringify(req.body, null, 2));
+        
+        if (!process.env.HUBSPOT_API_KEY) {
+            throw new Error('HUBSPOT_API_KEY is not set in environment variables');
+        }
+
         // Format the data according to HubSpot API specification
         const hubspotData = {
             properties: {
@@ -120,9 +126,11 @@ app.post('/api/hubspot/contact', async (req, res) => {
         res.json(data);
     } catch (error) {
         console.error('Error details:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ 
             error: error.message,
-            details: error.stack
+            details: error.stack,
+            requestBody: req.body
         });
     }
 });
