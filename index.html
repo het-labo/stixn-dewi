@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>STIXN to Hubspot Demo</title>
+    <script src="stixn-reservation-hs.js"></script>
+</head>
+<body>
+
+
+    <h2>Activiteiten selectie</h2>
+
+    <!-- Activiteitenvelden zoals op de klantsite -->
+    <div class="activities-filter">
+        <input class="js-filter" value="724" type="checkbox" id="filter-724" />
+        <label for="filter-724" class="color-2">Lasershoot</label>
+    </div>
+
+    <div class="activities-filter">
+        <input class="js-filter" value="725" type="checkbox" id="filter-725" />
+        <label for="filter-725" class="color-3">Klimmen</label>
+    </div>
+
+    <div class="activities-filter">
+        <input class="js-filter" value="726" type="checkbox" id="filter-726" />
+        <label for="filter-726" class="color-4">Virtual Reality</label>
+    </div>
+
+    <br>
+    <h3>Jouw e-mailadres</h3>
+    <input type="email" id="reservation_customer_form_email" placeholder="jij@example.com" required />
+
+    <br><br>
+    <button class="js-finalize">Bevestig reservatie</button>
+
+    <pre id="result" style="margin-top:2rem;background:#f3f3f3;padding:1rem;"></pre>
+
+
+</body>
+</html>
