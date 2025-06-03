@@ -78,6 +78,8 @@
                 name: checkbox.nextElementSibling.textContent
             }));
 
+        console.log('Selected Activities:', selectedActivities);
+
         const email = document.getElementById('reservation_customer_form_email')?.value || '';
 
         return {
@@ -106,6 +108,9 @@
 
     // Update HubSpot contact
     async function updateHubSpotContact(formData, reservatieStatus) {
+        console.log('Form Data being sent to HubSpot:', formData);
+        console.log('Activities being sent:', formData.activities);
+        
         const contactData = {
             properties: {
                 email: formData.email,
@@ -113,6 +118,8 @@
                 reservatie_voltooid: reservatieStatus
             }
         };
+
+        console.log('Final contact data being sent:', contactData);
 
         const response = await fetch(`${config.proxyEndpoint}/contact`, {
             method: 'POST',
