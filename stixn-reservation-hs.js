@@ -30,8 +30,7 @@
                 id: checkbox.id,
                 value: checkbox.value,
                 checked: checkbox.checked,
-                label: checkbox.nextElementSibling?.textContent,
-                labelElement: checkbox.nextElementSibling
+                label: document.querySelector(`label[for="${checkbox.id}"]`)?.textContent
             });
         });
 
@@ -39,7 +38,7 @@
         console.log('Email field found:', !!emailField);
         if (emailField) {
             console.log('Email field value:', emailField.value);
-            emailField.addEventListener('input', handleFormChange);
+            emailField.addEventListener('input', handleEmailChange);
         }
 
         const submitButton = document.querySelector('.js-pressFinalize');
@@ -56,61 +55,62 @@
     }
 
     // Handle checkbox changes
-    async function handleCheckboxChange(event) {
+    function handleCheckboxChange(event) {
         console.log('Checkbox changed:', {
             id: event.target.id,
             value: event.target.value,
             checked: event.target.checked,
-            label: event.target.nextElementSibling?.textContent
+            label: document.querySelector(`label[for="${event.target.id}"]`)?.textContent
         });
 
-        const formData = collectFormData();
-        console.log('Form data after checkbox change:', formData);
-        
         // Store selected activities in localStorage
-        localStorage.setItem('selectedActivities', JSON.stringify(formData.activities));
+        const selectedActivities = collectSelectedActivities();
+        localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
         
-        if (formData.email) {
+        // If we have an email, update HubSpot
+        const email = localStorage.getItem('userEmail');
+        if (email) {
+            updateHubSpotWithStoredData();
+        }
+    }
+
+    // Handle email changes
+    async function handleEmailChange(event) {
+        const email = event.target.value;
+        if (email) {
+            localStorage.setItem('userEmail', email);
+            // Update HubSpot with stored data when email is entered
+            await updateHubSpotWithStoredData();
+        }
+    }
+
+    // Collect selected activities
+    function collectSelectedActivities() {
+        return Array.from(document.querySelectorAll('.js-filter:checked'))
+            .map(checkbox => {
+                const label = document.querySelector(`label[for="${checkbox.id}"]`);
+                return {
+                    id: checkbox.value,
+                    name: label ? label.textContent.trim() : ''
+                };
+            });
+    }
+
+    // Update HubSpot with stored data
+    async function updateHubSpotWithStoredData() {
+        const email = localStorage.getItem('userEmail');
+        const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+        
+        if (email && storedActivities.length > 0) {
             try {
-                await updateHubSpotContact(formData, false);
+                await updateHubSpotContact({
+                    email: email,
+                    activities: storedActivities
+                }, false);
             } catch (error) {
                 console.error('Error updating HubSpot:', error);
             }
         }
-    }
-
-    // Handle form changes
-    function handleFormChange() {
-        const formData = collectFormData();
-        // Store email in localStorage
-        if (formData.email) {
-            localStorage.setItem('userEmail', formData.email);
-        }
-    }
-
-    // Collect form data
-    function collectFormData() {
-        const selectedActivities = Array.from(document.querySelectorAll('.js-filter:checked'))
-            .map(checkbox => {
-                // Find the label that corresponds to this checkbox
-                const label = document.querySelector(`label[for="${checkbox.id}"]`);
-                const activity = {
-                    id: checkbox.value,
-                    name: label ? label.textContent.trim() : ''
-                };
-                console.log('Processing activity:', activity);
-                return activity;
-            });
-
-        console.log('All selected activities:', selectedActivities);
-
-        const email = document.getElementById('reservation_customer_form_email')?.value || '';
-        console.log('Current email:', email);
-
-        return {
-            activities: selectedActivities,
-            email: email
-        };
     }
 
     // Handle form submission
@@ -119,10 +119,10 @@
         console.log('Button element:', event.target);
         console.log('Button classes:', event.target.className);
         
-        const formData = collectFormData();
-        console.log('Form data collected:', formData);
+        const email = localStorage.getItem('userEmail');
+        const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
         
-        if (!formData.email) {
+        if (!email) {
             console.log('No email found, returning');
             return;
         }
@@ -134,7 +134,10 @@
 
         try {
             // Only set reservatie_voltooid to true if it's not a next button
-            await updateHubSpotContact(formData, !isNextButton);
+            await updateHubSpotContact({
+                email: email,
+                activities: storedActivities
+            }, !isNextButton);
             console.log('HubSpot update completed with reservatie_voltooid:', !isNextButton);
             
             // Clear localStorage after successful submission
