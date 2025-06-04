@@ -42,6 +42,7 @@ app.post('/api/hubspot/contact', async (req, res) => {
         const hubspotData = {
             properties: {
                 email: req.body.properties.email,
+                name: req.body.properties.name,
                 gekozen_activiteit: req.body.properties.gekozen_activiteit,
                 reservatie_voltooid: req.body.properties.reservatie_voltooid
             }

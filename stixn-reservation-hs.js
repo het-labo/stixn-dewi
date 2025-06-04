@@ -35,10 +35,8 @@
             if (storedEmail) {
                 emailField.value = storedEmail;
             }
-            // Add multiple event listeners for email field
-            emailField.addEventListener('input', handleEmailInteraction);
-            emailField.addEventListener('focus', handleEmailInteraction);
-            emailField.addEventListener('blur', handleEmailInteraction);
+            // Only listen for blur event
+            emailField.addEventListener('blur', handleEmailBlur);
         }
 
         const submitButton = document.querySelector('.js-pressFinalize');
@@ -66,13 +64,12 @@
         }
     }
 
-    // Handle email interactions
-    async function handleEmailInteraction(event) {
+    // Handle email blur
+    async function handleEmailBlur(event) {
         const email = event.target.value;
         if (email) {
-            console.log('=== EMAIL INTERACTION ===');
+            console.log('=== EMAIL BLUR ===');
             console.log('Email:', email);
-            console.log('Event type:', event.type);
             
             localStorage.setItem('userEmail', email);
             // Update HubSpot with stored data and 'Nee' status
@@ -152,9 +149,15 @@
             .join(', ');
             
         console.log('Activities string:', activitiesString);
+
+        // Get name fields
+        const nickname = document.getElementById('reservation_customer_form_nickname')?.value || '';
+        const surname = document.getElementById('reservation_customer_form_surname')?.value || '';
+        const fullName = `${nickname} ${surname}`.trim();
         
         const contactData = {
             properties: {
+                name: nickname + ' ' + surname || '',
                 email: formData.email,
                 gekozen_activiteit: activitiesString || '',
                 reservatie_voltooid: isFinal ? true : false
