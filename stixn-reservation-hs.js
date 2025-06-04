@@ -16,38 +16,32 @@
 
     // Set up event listeners for form elements
     function setupEventListeners() {
-        // Debug form structure
-        console.log('=== Form Structure Debug ===');
-        
         const checkboxes = document.querySelectorAll('.js-filter');
-        console.log('Found checkboxes:', checkboxes.length);
-        checkboxes.forEach((checkbox, index) => {
-            console.log(`Checkbox ${index}:`, {
-                id: checkbox.id,
-                value: checkbox.value,
-                checked: checkbox.checked,
-                label: document.querySelector(`label[for="${checkbox.id}"]`)?.textContent
-            });
+        
+        // Restore checkbox states from localStorage
+        const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+        checkboxes.forEach(checkbox => {
+            const storedActivity = storedActivities.find(a => a.id === checkbox.value);
+            if (storedActivity) {
+                checkbox.checked = true;
+            }
+            checkbox.addEventListener('change', handleCheckboxChange);
         });
 
         const emailField = document.getElementById('reservation_customer_form_email');
-        console.log('Email field found:', !!emailField);
         if (emailField) {
-            console.log('Email field value:', emailField.value);
+            // Restore email from localStorage
+            const storedEmail = localStorage.getItem('userEmail');
+            if (storedEmail) {
+                emailField.value = storedEmail;
+            }
             emailField.addEventListener('input', handleEmailChange);
         }
 
         const submitButton = document.querySelector('.js-pressFinalize');
-        console.log('Submit button found:', !!submitButton);
         if (submitButton) {
-            console.log('Submit button classes:', submitButton.className);
             submitButton.addEventListener('click', handleSubmit);
         }
-
-        // Set up checkbox listeners
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', handleCheckboxChange);
-        });
     }
 
     // Handle checkbox changes
@@ -136,10 +130,6 @@
         try {
             // Update HubSpot with final status
             await updateHubSpotWithStoredData(!isNextButton);
-            
-            // Clear localStorage after successful submission
-            localStorage.removeItem('selectedActivities');
-            localStorage.removeItem('userEmail');
         } catch (error) {
             console.error('Error submitting to HubSpot:', error);
         }
