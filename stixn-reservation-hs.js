@@ -19,8 +19,10 @@
         // Handle filter checkboxes
         const checkboxes = document.querySelectorAll('.js-filter');
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+        
+        // Restore checkbox states
         checkboxes.forEach(checkbox => {
-            const storedActivity = storedActivities.find(a => a.id === checkbox.value);
+            const storedActivity = storedActivities.find(a => a.type === 'filter' && a.name === checkbox.value);
             if (storedActivity) {
                 checkbox.checked = true;
             }
@@ -65,7 +67,9 @@
             const selectedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
             
             // Check if this activity is already in the list
-            const isAlreadySelected = selectedActivities.some(activity => activity.name === activityTitle);
+            const isAlreadySelected = selectedActivities.some(activity => 
+                activity.type === 'activity' && activity.name === activityTitle
+            );
             
             if (!isAlreadySelected) {
                 // Add new activity to the list
@@ -140,11 +144,8 @@
         
         // Get activities from js-activity elements that were clicked
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
-        storedActivities.forEach(activity => {
-            if (!activities.some(a => a.name === activity.name)) {
-                activities.push(activity);
-            }
-        });
+        const clickedActivities = storedActivities.filter(a => a.type === 'activity');
+        activities.push(...clickedActivities);
         
         return activities;
     }
