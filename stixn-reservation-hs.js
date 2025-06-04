@@ -153,7 +153,7 @@
             properties: {
                 email: formData.email,
                 gekozen_activiteit: activitiesString || '',
-                reservatie_voltooid: isFinal ? 'Ja' : 'Nee'
+                reservatie_voltooid: isFinal ? true : false
             }
         };
 
