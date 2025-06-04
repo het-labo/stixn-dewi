@@ -103,6 +103,25 @@ app.post('/api/hubspot/contact', async (req, res) => {
                 },
                 body: JSON.stringify(hubspotData)
             });
+
+            // If creation fails with "already exists" error, try to update
+            if (!response.ok) {
+                const errorData = await response.json();
+                if (errorData.message && errorData.message.includes('Contact already exists')) {
+                    const existingId = errorData.message.match(/Existing ID: (\d+)/)?.[1];
+                    if (existingId) {
+                        console.log('Contact exists, updating with ID:', existingId);
+                        response = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts/${existingId}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${process.env.HUBSPOT_API_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(hubspotData)
+                        });
+                    }
+                }
+            }
         }
 
         // Log the response status and headers for debugging
