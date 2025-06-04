@@ -59,28 +59,16 @@
     // Handle activity click
     function handleActivityClick(activityElement) {
         const activityTitle = activityElement.querySelector('.activity-title')?.textContent.trim() || '';
-        const activityId = activityElement.dataset.id;
         
         if (activityTitle) {
-            const selectedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
-            
-            // Check if activity is already selected
-            const existingIndex = selectedActivities.findIndex(a => a.id === activityId);
-            
-            if (existingIndex === -1) {
-                // Add new activity
-                selectedActivities.push({
-                    id: activityId,
-                    name: activityTitle
-                });
-            }
-            
-            // Store in localStorage
-            localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
+            // Store only this activity in localStorage
+            localStorage.setItem('selectedActivities', JSON.stringify([{
+                name: activityTitle
+            }]));
             
             // Log localStorage contents
             console.log('=== LOCALSTORAGE CONTENTS ===');
-            console.log('selectedActivities:', selectedActivities);
+            console.log('selectedActivities:', JSON.parse(localStorage.getItem('selectedActivities') || '[]'));
             console.log('userEmail:', localStorage.getItem('userEmail'));
             
             // If we have an email, update HubSpot
@@ -132,19 +120,7 @@
             const label = document.querySelector(`label[for="${checkbox.id}"]`);
             if (label) {
                 activities.push({
-                    id: checkbox.value,
                     name: label.textContent.trim()
-                });
-            }
-        });
-        
-        // Get activities from js-activity elements
-        document.querySelectorAll('.js-activity').forEach(activity => {
-            const title = activity.querySelector('.activity-title')?.textContent.trim();
-            if (title) {
-                activities.push({
-                    id: activity.dataset.id,
-                    name: title
                 });
             }
         });
