@@ -16,9 +16,8 @@
 
     // Set up event listeners for form elements
     function setupEventListeners() {
+        // Handle filter checkboxes
         const checkboxes = document.querySelectorAll('.js-filter');
-        
-        // Restore checkbox states from localStorage
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
         checkboxes.forEach(checkbox => {
             const storedActivity = storedActivities.find(a => a.id === checkbox.value);
@@ -28,14 +27,21 @@
             checkbox.addEventListener('change', handleCheckboxChange);
         });
 
+        // Handle activity elements
+        const activities = document.querySelectorAll('.js-activity');
+        activities.forEach(activity => {
+            const addButton = activity.querySelector('.js-add-activity');
+            if (addButton) {
+                addButton.addEventListener('click', () => handleActivityClick(activity));
+            }
+        });
+
         const emailField = document.getElementById('reservation_customer_form_email');
         if (emailField) {
-            // Restore email from localStorage
             const storedEmail = localStorage.getItem('userEmail');
             if (storedEmail) {
                 emailField.value = storedEmail;
             }
-            // Only listen for blur event
             emailField.addEventListener('blur', handleEmailBlur);
         }
 
@@ -44,10 +50,44 @@
             submitButton.addEventListener('click', handleSubmit);
         }
 
-        // Add payment form click handler
         const paymentForm = document.querySelector('.js-payment-form');
         if (paymentForm) {
             paymentForm.addEventListener('click', handlePaymentFormClick);
+        }
+    }
+
+    // Handle activity click
+    function handleActivityClick(activityElement) {
+        const activityTitle = activityElement.querySelector('.activity-title')?.textContent.trim() || '';
+        const activityId = activityElement.dataset.id;
+        
+        if (activityTitle) {
+            const selectedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+            
+            // Check if activity is already selected
+            const existingIndex = selectedActivities.findIndex(a => a.id === activityId);
+            
+            if (existingIndex === -1) {
+                // Add new activity
+                selectedActivities.push({
+                    id: activityId,
+                    name: activityTitle
+                });
+            }
+            
+            // Store in localStorage
+            localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
+            
+            // Log localStorage contents
+            console.log('=== LOCALSTORAGE CONTENTS ===');
+            console.log('selectedActivities:', selectedActivities);
+            console.log('userEmail:', localStorage.getItem('userEmail'));
+            
+            // If we have an email, update HubSpot
+            const email = localStorage.getItem('userEmail');
+            if (email) {
+                updateHubSpotWithStoredData(false);
+            }
         }
     }
 
@@ -58,7 +98,7 @@
         // Store in localStorage
         localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
         
-        // Log ALL localStorage contents
+        // Log localStorage contents
         console.log('=== LOCALSTORAGE CONTENTS ===');
         console.log('selectedActivities:', JSON.parse(localStorage.getItem('selectedActivities') || '[]'));
         console.log('userEmail:', localStorage.getItem('userEmail'));
@@ -85,14 +125,31 @@
 
     // Collect selected activities
     function collectSelectedActivities() {
-        return Array.from(document.querySelectorAll('.js-filter:checked'))
-            .map(checkbox => {
-                const label = document.querySelector(`label[for="${checkbox.id}"]`);
-                return {
+        const activities = [];
+        
+        // Get activities from js-filter checkboxes
+        document.querySelectorAll('.js-filter:checked').forEach(checkbox => {
+            const label = document.querySelector(`label[for="${checkbox.id}"]`);
+            if (label) {
+                activities.push({
                     id: checkbox.value,
-                    name: label ? label.textContent.trim() : ''
-                };
-            });
+                    name: label.textContent.trim()
+                });
+            }
+        });
+        
+        // Get activities from js-activity elements
+        document.querySelectorAll('.js-activity').forEach(activity => {
+            const title = activity.querySelector('.activity-title')?.textContent.trim();
+            if (title) {
+                activities.push({
+                    id: activity.dataset.id,
+                    name: title
+                });
+            }
+        });
+        
+        return activities;
     }
 
     // Update HubSpot with stored data
