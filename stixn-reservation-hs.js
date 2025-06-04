@@ -153,12 +153,12 @@
         // Get name fields
         const nickname = document.getElementById('reservation_customer_form_nickname')?.value || '';
         const surname = document.getElementById('reservation_customer_form_surname')?.value || '';
-        const fullName = `${nickname} ${surname}`.trim();
         
         const contactData = {
             properties: {
-                name: nickname + ' ' + surname || '',
                 email: formData.email,
+                firstname: nickname,
+                lastname: surname,
                 gekozen_activiteit: activitiesString || '',
                 reservatie_voltooid: isFinal ? true : false
             }
