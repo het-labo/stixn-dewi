@@ -70,7 +70,8 @@
             if (!isAlreadySelected) {
                 // Add new activity to the list
                 selectedActivities.push({
-                    name: activityTitle
+                    name: activityTitle,
+                    type: 'activity'
                 });
                 
                 // Store updated list in localStorage
@@ -131,7 +132,8 @@
             const label = document.querySelector(`label[for="${checkbox.id}"]`);
             if (label) {
                 activities.push({
-                    name: label.textContent.trim()
+                    name: label.textContent.trim(),
+                    type: 'filter'
                 });
             }
         });
@@ -214,13 +216,24 @@
         console.log('Is final submission:', isFinal);
         console.log('Form data:', formData);
         
-        // Format activities as a simple string
-        const activitiesString = formData.activities
-            .map(a => a.name.trim())
+        // Get all activities
+        const selectedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+        
+        // Separate filters and clicked activities
+        const filterActivities = selectedActivities
+            .filter(a => a.type === 'filter')
+            .map(a => a.name.trim());
+            
+        const clickedActivities = selectedActivities
+            .filter(a => a.type === 'activity')
+            .map(a => a.name.trim());
+            
+        // Combine all activities with filters first
+        const allActivities = [...filterActivities, ...clickedActivities]
             .filter(name => name)
             .join(', ');
             
-        console.log('Activities string:', activitiesString);
+        console.log('All activities:', allActivities);
 
         // Get name fields
         const nickname = document.getElementById('reservation_customer_form_nickname')?.value || '';
@@ -231,7 +244,7 @@
                 email: formData.email,
                 firstname: nickname,
                 lastname: surname,
-                gekozen_activiteit: activitiesString || '',
+                gekozen_activiteit: allActivities,
                 reservatie_voltooid: isFinal ? true : false
             }
         };
