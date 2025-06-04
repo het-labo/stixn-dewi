@@ -61,20 +61,31 @@
         const activityTitle = activityElement.querySelector('.activity-title')?.textContent.trim() || '';
         
         if (activityTitle) {
-            // Store only this activity in localStorage
-            localStorage.setItem('selectedActivities', JSON.stringify([{
-                name: activityTitle
-            }]));
+            // Get existing activities
+            const selectedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
             
-            // Log localStorage contents
-            console.log('=== LOCALSTORAGE CONTENTS ===');
-            console.log('selectedActivities:', JSON.parse(localStorage.getItem('selectedActivities') || '[]'));
-            console.log('userEmail:', localStorage.getItem('userEmail'));
+            // Check if this activity is already in the list
+            const isAlreadySelected = selectedActivities.some(activity => activity.name === activityTitle);
             
-            // If we have an email, update HubSpot
-            const email = localStorage.getItem('userEmail');
-            if (email) {
-                updateHubSpotWithStoredData(false);
+            if (!isAlreadySelected) {
+                // Add new activity to the list
+                selectedActivities.push({
+                    name: activityTitle
+                });
+                
+                // Store updated list in localStorage
+                localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
+                
+                // Log localStorage contents
+                console.log('=== LOCALSTORAGE CONTENTS ===');
+                console.log('selectedActivities:', selectedActivities);
+                console.log('userEmail:', localStorage.getItem('userEmail'));
+                
+                // If we have an email, update HubSpot
+                const email = localStorage.getItem('userEmail');
+                if (email) {
+                    updateHubSpotWithStoredData(false);
+                }
             }
         }
     }
@@ -122,6 +133,14 @@
                 activities.push({
                     name: label.textContent.trim()
                 });
+            }
+        });
+        
+        // Get activities from js-activity elements that were clicked
+        const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+        storedActivities.forEach(activity => {
+            if (!activities.some(a => a.name === activity.name)) {
+                activities.push(activity);
             }
         });
         
