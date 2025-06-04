@@ -35,7 +35,10 @@
             if (storedEmail) {
                 emailField.value = storedEmail;
             }
-            emailField.addEventListener('input', handleEmailChange);
+            // Add multiple event listeners for email field
+            emailField.addEventListener('input', handleEmailInteraction);
+            emailField.addEventListener('focus', handleEmailInteraction);
+            emailField.addEventListener('blur', handleEmailInteraction);
         }
 
         const submitButton = document.querySelector('.js-pressFinalize');
@@ -63,12 +66,13 @@
         }
     }
 
-    // Handle email changes
-    async function handleEmailChange(event) {
+    // Handle email interactions
+    async function handleEmailInteraction(event) {
         const email = event.target.value;
         if (email) {
-            console.log('=== EMAIL ENTERED ===');
+            console.log('=== EMAIL INTERACTION ===');
             console.log('Email:', email);
+            console.log('Event type:', event.type);
             
             localStorage.setItem('userEmail', email);
             // Update HubSpot with stored data and 'Nee' status
