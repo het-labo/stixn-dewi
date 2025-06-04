@@ -43,6 +43,12 @@
         if (submitButton) {
             submitButton.addEventListener('click', handleSubmit);
         }
+
+        // Add payment form click handler
+        const paymentForm = document.querySelector('.js-payment-form');
+        if (paymentForm) {
+            paymentForm.addEventListener('click', handlePaymentFormClick);
+        }
     }
 
     // Handle checkbox changes
@@ -133,6 +139,20 @@
             await updateHubSpotWithStoredData(!isNextButton);
         } catch (error) {
             console.error('Error submitting to HubSpot:', error);
+        }
+    }
+
+    // Handle payment form click
+    async function handlePaymentFormClick() {
+        console.log('=== PAYMENT FORM CLICKED ===');
+        const email = localStorage.getItem('userEmail');
+        if (email) {
+            try {
+                await updateHubSpotWithStoredData(true);
+                console.log('Updated HubSpot with reservatie_voltooid = true');
+            } catch (error) {
+                console.error('Error updating HubSpot on payment form click:', error);
+            }
         }
     }
 
