@@ -63,34 +63,31 @@
         const activityTitle = activityElement.querySelector('.activity-title')?.textContent.trim() || '';
         
         if (activityTitle) {
-            // Get existing activities
+            // Get existing filter activities
             const selectedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
+            const filterActivities = selectedActivities.filter(a => a.type === 'filter');
             
-            // Check if this activity is already in the list
-            const isAlreadySelected = selectedActivities.some(activity => 
-                activity.type === 'activity' && activity.name === activityTitle
-            );
-            
-            if (!isAlreadySelected) {
-                // Add new activity to the list
-                selectedActivities.push({
+            // Create new array with only filter activities and the new clicked activity
+            const updatedActivities = [
+                ...filterActivities,
+                {
                     name: activityTitle,
                     type: 'activity'
-                });
-                
-                // Store updated list in localStorage
-                localStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
-                
-                // Log localStorage contents
-                console.log('=== LOCALSTORAGE CONTENTS ===');
-                console.log('selectedActivities:', selectedActivities);
-                console.log('userEmail:', localStorage.getItem('userEmail'));
-                
-                // If we have an email, update HubSpot
-                const email = localStorage.getItem('userEmail');
-                if (email) {
-                    updateHubSpotWithStoredData(false);
                 }
+            ];
+            
+            // Store updated list in localStorage
+            localStorage.setItem('selectedActivities', JSON.stringify(updatedActivities));
+            
+            // Log localStorage contents
+            console.log('=== LOCALSTORAGE CONTENTS ===');
+            console.log('selectedActivities:', updatedActivities);
+            console.log('userEmail:', localStorage.getItem('userEmail'));
+            
+            // If we have an email, update HubSpot
+            const email = localStorage.getItem('userEmail');
+            if (email) {
+                updateHubSpotWithStoredData(false);
             }
         }
     }
