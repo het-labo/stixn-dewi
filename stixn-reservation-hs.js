@@ -8,7 +8,7 @@
     // Initialize the script
     function init() {
         // Clear HubSpot tracking cookie
-        document.cookie = "hubspotutk=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        //document.cookie = "hubspotutk=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', setupEventListeners);
@@ -240,8 +240,18 @@
         console.log('All activities:', allActivities);
 
         // Get name fields
-        const nickname = document.getElementById('reservation_customer_form_nickname')?.value || '';
-        const surname = document.getElementById('reservation_customer_form_surname')?.value || '';
+        const nicknameField = document.getElementById('reservation_customer_form_nickname');
+        const surnameField = document.getElementById('reservation_customer_form_surname');
+        
+        console.log('Name fields found:', {
+            nicknameField: nicknameField ? 'yes' : 'no',
+            surnameField: surnameField ? 'yes' : 'no'
+        });
+        
+        const nickname = nicknameField?.value || '';
+        const surname = surnameField?.value || '';
+        
+        console.log('Name values:', { nickname, surname });
         
         const contactData = {
             properties: {
