@@ -7,6 +7,9 @@
 
     // Initialize the script
     function init() {
+        // Clear HubSpot tracking cookie
+        document.cookie = "hubspotutk=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', setupEventListeners);
         } else {
