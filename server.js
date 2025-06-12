@@ -42,8 +42,8 @@ app.post('/api/hubspot/contact', async (req, res) => {
         const hubspotData = {
             properties: {
                 email: req.body.properties.email,
-                firstname: req.body.properties.firstname || '',
-                lastname: req.body.properties.lastname || '',
+                firstname: req.body.properties.firstname,
+                lastname: req.body.properties.lastname,
                 gekozen_activiteit: req.body.properties.gekozen_activiteit,
                 reservatie_voltooid: req.body.properties.reservatie_voltooid
             }
@@ -148,6 +148,103 @@ app.post('/api/hubspot/contact', async (req, res) => {
     } catch (error) {
         console.error('Error details:', error);
         console.error('Error stack:', error.stack);
+        res.status(500).json({ 
+            error: error.message,
+            details: error.stack,
+            requestBody: req.body
+        });
+    }
+});
+
+// New endpoint for tracking site visits
+app.post('/api/hubspot/track', async (req, res) => {
+    try {
+        console.log('Received tracking request:', JSON.stringify(req.body, null, 2));
+        
+        if (!process.env.HUBSPOT_API_KEY) {
+            throw new Error('HUBSPOT_API_KEY is not set in environment variables');
+        }
+
+        const { email, activities, page, timestamp } = req.body;
+
+        // First, ensure the contact exists in HubSpot
+        const searchResponse = await fetch('https://api.hubapi.com/crm/v3/objects/contacts/search', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.HUBSPOT_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                filterGroups: [{
+                    filters: [{
+                        propertyName: 'email',
+                        operator: 'EQ',
+                        value: email
+                    }]
+                }]
+            })
+        });
+
+        const searchData = await searchResponse.json();
+        let contactId = null;
+
+        if (searchData.total > 0) {
+            contactId = searchData.results[0].id;
+        } else {
+            // Create a new contact if it doesn't exist
+            const createResponse = await fetch('https://api.hubapi.com/crm/v3/objects/contacts', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.HUBSPOT_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    properties: {
+                        email: email
+                    }
+                })
+            });
+
+            const createData = await createResponse.json();
+            contactId = createData.id;
+        }
+
+        // Create an engagement for the site visit
+        const engagementData = {
+            engagement: {
+                active: true,
+                type: "SITE_VISIT",
+                timestamp: new Date(timestamp).getTime()
+            },
+            associations: {
+                contactIds: [contactId]
+            },
+            metadata: {
+                url: page,
+                title: "Activity Selection",
+                activities: activities.map(a => a.name).join(', ')
+            }
+        };
+
+        const engagementResponse = await fetch('https://api.hubapi.com/engagements/v1/engagements', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.HUBSPOT_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(engagementData)
+        });
+
+        if (!engagementResponse.ok) {
+            throw new Error(`Failed to create engagement: ${engagementResponse.statusText}`);
+        }
+
+        const responseData = await engagementResponse.json();
+        console.log('Created engagement:', responseData);
+
+        res.json({ success: true, engagementId: responseData.id });
+    } catch (error) {
+        console.error('Error tracking site visit:', error);
         res.status(500).json({ 
             error: error.message,
             details: error.stack,
