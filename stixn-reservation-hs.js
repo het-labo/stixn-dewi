@@ -165,45 +165,13 @@
         
         if (email && storedActivities.length > 0) {
             try {
-                if (isFinal) {
-                    // For final submissions, use the API
-                    await updateHubSpotContact({
-                        email: email,
-                        activities: storedActivities
-                    }, true);
-                } else {
-                    // For non-final interactions, use site visit tracking
-                    await trackSiteVisit(email, storedActivities);
-                }
+                await updateHubSpotContact({
+                    email: email,
+                    activities: storedActivities
+                }, isFinal);
             } catch (error) {
                 console.error('Error updating HubSpot:', error);
             }
-        }
-    }
-
-    // Track site visit in HubSpot
-    async function trackSiteVisit(email, activities) {
-        try {
-            const response = await fetch(`${config.proxyEndpoint}/track`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: email,
-                    activities: activities,
-                    page: window.location.pathname,
-                    timestamp: new Date().toISOString()
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to track site visit: ${response.status}`);
-            }
-
-            console.log('Site visit tracked successfully');
-        } catch (error) {
-            console.error('Error tracking site visit:', error);
         }
     }
 
