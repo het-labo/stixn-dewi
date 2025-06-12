@@ -248,20 +248,27 @@
             surnameField: surnameField ? 'yes' : 'no'
         });
         
-        const nickname = nicknameField?.value || '';
-        const surname = surnameField?.value || '';
+        const nickname = nicknameField?.value?.trim() || '';
+        const surname = surnameField?.value?.trim() || '';
         
         console.log('Name values:', { nickname, surname });
         
         const contactData = {
             properties: {
                 email: formData.email,
-                firstname: nickname,
-                lastname: surname,
+                firstname: nickname || undefined,
+                lastname: surname || undefined,
                 gekozen_activiteit: allActivities,
                 reservatie_voltooid: isFinal ? true : false
             }
         };
+
+        // Remove undefined properties
+        Object.keys(contactData.properties).forEach(key => {
+            if (contactData.properties[key] === undefined) {
+                delete contactData.properties[key];
+            }
+        });
 
         console.log('Contact data being sent:', contactData);
 
