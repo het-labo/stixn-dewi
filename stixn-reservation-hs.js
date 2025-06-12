@@ -125,8 +125,21 @@
             console.log('Email:', email);
             
             localStorage.setItem('userEmail', email);
-            // Update HubSpot with stored data and 'Nee' status
-            await updateHubSpotWithStoredData(false);
+
+            // Get current name values
+            const nicknameField = document.getElementById('reservation_customer_form_nickname');
+            const surnameField = document.getElementById('reservation_customer_form_surname');
+            
+            const nickname = nicknameField?.value?.trim() || '';
+            const surname = surnameField?.value?.trim() || '';
+            
+            console.log('Current name values:', { nickname, surname });
+            
+            // Update HubSpot with stored data, current names, and 'Nee' status
+            await updateHubSpotWithStoredData(false, {
+                firstname: nickname || undefined,
+                lastname: surname || undefined
+            });
         }
     }
 
@@ -154,7 +167,7 @@
     }
 
     // Update HubSpot with stored data
-    async function updateHubSpotWithStoredData(isFinal) {
+    async function updateHubSpotWithStoredData(isFinal, additionalProperties = {}) {
         const email = localStorage.getItem('userEmail');
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
         
@@ -162,12 +175,14 @@
         console.log('Email:', email);
         console.log('Activities:', storedActivities);
         console.log('Is final submission:', isFinal);
+        console.log('Additional properties:', additionalProperties);
         
         if (email && storedActivities.length > 0) {
             try {
                 await updateHubSpotContact({
                     email: email,
-                    activities: storedActivities
+                    activities: storedActivities,
+                    ...additionalProperties
                 }, isFinal);
             } catch (error) {
                 console.error('Error updating HubSpot:', error);
@@ -239,25 +254,30 @@
             
         console.log('All activities:', allActivities);
 
-        // Get name fields
-        const nicknameField = document.getElementById('reservation_customer_form_nickname');
-        const surnameField = document.getElementById('reservation_customer_form_surname');
+        // Get name fields if not provided in formData
+        let nickname = formData.firstname;
+        let surname = formData.lastname;
         
-        console.log('Name fields found:', {
-            nicknameField: nicknameField ? 'yes' : 'no',
-            surnameField: surnameField ? 'yes' : 'no'
-        });
-        
-        const nickname = nicknameField?.value?.trim() || '';
-        const surname = surnameField?.value?.trim() || '';
+        if (nickname === undefined || surname === undefined) {
+            const nicknameField = document.getElementById('reservation_customer_form_nickname');
+            const surnameField = document.getElementById('reservation_customer_form_surname');
+            
+            console.log('Name fields found:', {
+                nicknameField: nicknameField ? 'yes' : 'no',
+                surnameField: surnameField ? 'yes' : 'no'
+            });
+            
+            nickname = nickname || nicknameField?.value?.trim() || undefined;
+            surname = surname || surnameField?.value?.trim() || undefined;
+        }
         
         console.log('Name values:', { nickname, surname });
         
         const contactData = {
             properties: {
                 email: formData.email,
-                firstname: nickname || undefined,
-                lastname: surname || undefined,
+                firstname: nickname,
+                lastname: surname,
                 gekozen_activiteit: allActivities,
                 reservatie_voltooid: isFinal ? true : false
             }
