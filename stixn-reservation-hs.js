@@ -7,8 +7,18 @@
 
     // Initialize the script
     function init() {
-        // Clear HubSpot tracking cookie
-        document.cookie = "hubspotutk=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        // Clear all HubSpot tracking cookies
+        const cookies = [
+            'hubspotutk',
+            'hubspotapi',
+            'hubspotapi_*',
+            'hubspotapi_*_*'
+        ];
+        
+        cookies.forEach(cookie => {
+            document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.stixn.be;`;
+            document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        });
         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', setupEventListeners);
