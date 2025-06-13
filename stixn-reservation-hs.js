@@ -19,6 +19,10 @@
             document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.stixn.be;`;
             document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         });
+
+        // Clear HubSpot related localStorage items
+        localStorage.removeItem('hubspotutk');
+        localStorage.removeItem('hubspotapi');
         
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', setupEventListeners);
