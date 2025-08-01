@@ -11,20 +11,23 @@
         return expiry && Date.now() > parseInt(expiry, 10);
     }
 
-    // Utility: set session expiry timestamp
-    function setSessionExpiry(seconds = 30) {
-        const expireAt = Date.now() + seconds * 1000;
-        sessionStorage.setItem('sessionExpiry', expireAt.toString());
+    // Utility: set session expiry timestamp ONLY if not already set
+    function setSessionExpiryOnce(seconds = 30) {
+        const expiry = sessionStorage.getItem('sessionExpiry');
+        if (!expiry) {
+            const expireAt = Date.now() + seconds * 1000;
+            sessionStorage.setItem('sessionExpiry', expireAt.toString());
+        }
     }
 
     // Clear session if expired
     if (isSessionExpired()) {
         console.log('Session expired — clearing sessionStorage');
         sessionStorage.clear();
-    } else {
-        // Extend session each time script is reloaded or re-run
-        setSessionExpiry();
     }
+
+    // Set session expiry once
+    setSessionExpiryOnce();
 
     // Initialize the script
     function init() {
