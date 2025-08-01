@@ -182,7 +182,7 @@
             return;
         }
 
-        const isNextButton = event.currentTarget.classList.contains('btn--next');
+        const isNextButton = event.target.classList.contains('btn--next');
 
         try {
             await updateHubSpotWithStoredData(!isNextButton);
@@ -219,7 +219,7 @@
                 firstname: formData.firstname || nicknameField?.value?.trim(),
                 lastname: formData.lastname || surnameField?.value?.trim(),
                 gekozen_activiteit: allActivities,
-                reservatie_voltooid: isFinal ? 'Ja' : 'Nee'
+                reservatie_voltooid: isFinal ? true : false
             }
         };
 
