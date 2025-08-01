@@ -29,24 +29,6 @@
     }
 
     function setupEventListeners() {
-        // 🧼 Clean up if we just finished the final step
-        if (sessionStorage.getItem('clearOnNextLoad') === 'true') {
-            console.log('Detected final submit. Clearing sessionStorage and form fields...');
-            sessionStorage.clear();
-
-            const emailField = document.getElementById('reservation_customer_form_email');
-            if (emailField) emailField.value = '';
-
-            const nicknameField = document.getElementById('reservation_customer_form_nickname');
-            if (nicknameField) nicknameField.value = '';
-
-            const surnameField = document.getElementById('reservation_customer_form_surname');
-            if (surnameField) surnameField.value = '';
-
-            // Remove marker
-            sessionStorage.removeItem('clearOnNextLoad');
-        }
-
         const checkboxes = document.querySelectorAll('.js-filter');
         const storedActivities = JSON.parse(sessionStorage.getItem('selectedActivities') || '[]');
 
@@ -72,6 +54,11 @@
             if (storedEmail) {
                 emailField.value = storedEmail;
             }
+
+            // 🔒 Disable autofill
+            emailField.setAttribute('autocomplete', 'off');
+            emailField.setAttribute('name', 'email-' + Date.now());
+
             emailField.addEventListener('blur', handleEmailBlur);
         }
 
@@ -102,10 +89,6 @@
 
                 sessionStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
 
-                console.log('=== SESSIONSTORAGE CONTENTS ===');
-                console.log('selectedActivities:', selectedActivities);
-                console.log('userEmail:', sessionStorage.getItem('userEmail'));
-
                 const email = sessionStorage.getItem('userEmail');
                 if (email) {
                     updateHubSpotWithStoredData(false);
@@ -118,10 +101,6 @@
         const selectedActivities = collectSelectedActivities();
         sessionStorage.setItem('selectedActivities', JSON.stringify(selectedActivities));
 
-        console.log('=== SESSIONSTORAGE CONTENTS ===');
-        console.log('selectedActivities:', JSON.parse(sessionStorage.getItem('selectedActivities') || '[]'));
-        console.log('userEmail:', sessionStorage.getItem('userEmail'));
-
         const email = sessionStorage.getItem('userEmail');
         if (email) {
             updateHubSpotWithStoredData(false);
@@ -131,9 +110,6 @@
     async function handleEmailBlur(event) {
         const email = event.target.value;
         if (email) {
-            console.log('=== EMAIL BLUR ===');
-            console.log('Email:', email);
-
             sessionStorage.setItem('userEmail', email);
 
             const nicknameField = document.getElementById('reservation_customer_form_nickname');
@@ -141,8 +117,6 @@
 
             const nickname = nicknameField?.value?.trim() || '';
             const surname = surnameField?.value?.trim() || '';
-
-            console.log('Current name values:', { nickname, surname });
 
             await updateHubSpotWithStoredData(false, {
                 firstname: nickname || undefined,
@@ -175,12 +149,6 @@
         const email = sessionStorage.getItem('userEmail');
         const storedActivities = JSON.parse(sessionStorage.getItem('selectedActivities') || '[]');
 
-        console.log('=== UPDATING HUBSPOT ===');
-        console.log('Email:', email);
-        console.log('Activities:', storedActivities);
-        console.log('Is final submission:', isFinal);
-        console.log('Additional properties:', additionalProperties);
-
         if (email && storedActivities.length > 0) {
             try {
                 await updateHubSpotContact({
@@ -195,41 +163,43 @@
     }
 
     async function handleSubmit(event) {
-        console.log('=== FINAL SUBMIT ===');
+        console.log('=== FINAL SUBMIT BUTTON CLICKED ===');
         console.log('Button classes:', event.target.className);
 
         const email = sessionStorage.getItem('userEmail');
         const storedActivities = JSON.parse(sessionStorage.getItem('selectedActivities') || '[]');
 
         if (!email) {
-            console.log('No email found, returning');
+            console.log('No email found, skipping submission');
             return;
         }
 
-        const isNextButton = event.target.classList.contains('btn--next');
-        console.log('Is next button:', isNextButton);
-
         try {
-            await updateHubSpotWithStoredData(!isNextButton);
+            // Submit to HubSpot with final flag
+            await updateHubSpotWithStoredData(true);
 
-            // ✅ Set flag to clear on next load after final submission
-            if (!isNextButton) {
-                console.log('Final step detected. Will clear session on next page load.');
-                sessionStorage.setItem('clearOnNextLoad', 'true');
+            // ✅ Unconditionally clear sessionStorage
+            console.log('Clearing sessionStorage after final step submit');
+            sessionStorage.clear();
+
+            // Optional: Clear any autofilled email field
+            const emailField = document.getElementById('reservation_customer_form_email');
+            if (emailField) {
+                emailField.setAttribute('autocomplete', 'off');
+                emailField.setAttribute('name', 'email-' + Date.now());
+                emailField.value = '';
             }
 
         } catch (error) {
-            console.error('Error submitting to HubSpot:', error);
+            console.error('Error during final HubSpot submission:', error);
         }
     }
 
     async function handlePaymentFormClick() {
-        console.log('=== PAYMENT FORM CLICKED ===');
         const email = sessionStorage.getItem('userEmail');
         if (email) {
             try {
                 await updateHubSpotWithStoredData(true);
-                console.log('Updated HubSpot with reservatie_voltooid = true');
             } catch (error) {
                 console.error('Error updating HubSpot on payment form click:', error);
             }
@@ -237,10 +207,6 @@
     }
 
     async function updateHubSpotContact(formData, isFinal) {
-        console.log('=== SENDING TO HUBSPOT ===');
-        console.log('Is final submission:', isFinal);
-        console.log('Form data:', formData);
-
         const selectedActivities = JSON.parse(sessionStorage.getItem('selectedActivities') || '[]');
 
         const filterActivities = selectedActivities
@@ -262,16 +228,9 @@
             const nicknameField = document.getElementById('reservation_customer_form_nickname');
             const surnameField = document.getElementById('reservation_customer_form_surname');
 
-            console.log('Name fields found:', {
-                nicknameField: nicknameField ? 'yes' : 'no',
-                surnameField: surnameField ? 'yes' : 'no'
-            });
-
             nickname = nickname || nicknameField?.value?.trim() || undefined;
             surname = surname || surnameField?.value?.trim() || undefined;
         }
-
-        console.log('Name values:', { nickname, surname });
 
         const contactData = {
             properties: {
@@ -289,8 +248,6 @@
             }
         });
 
-        console.log('Contact data being sent:', contactData);
-
         try {
             const response = await fetch(`${config.proxyEndpoint}/contact`, {
                 method: 'POST',
@@ -301,8 +258,6 @@
             });
 
             const responseText = await response.text();
-            console.log('HubSpot response:', responseText);
-
             if (!response.ok) {
                 throw new Error(`Failed to update contact: ${response.status} - ${responseText}`);
             }
