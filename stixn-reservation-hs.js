@@ -193,6 +193,13 @@
 
         try {
             await updateHubSpotWithStoredData(!isNextButton);
+
+            // ✅ Clear sessionStorage on final submission
+            if (!isNextButton) {
+                console.log('Clearing sessionStorage after final step.');
+                sessionStorage.clear();
+            }
+
         } catch (error) {
             console.error('Error submitting to HubSpot:', error);
         }
