@@ -5,11 +5,26 @@
         proxyEndpoint: 'https://stixn-express-api.onrender.com/api/hubspot'
     };
 
-    // Auto-clear sessionStorage every 60 seconds
-    setInterval(() => {
-        console.log('Auto-clearing sessionStorage');
+    // Utility: check for session expiry
+    function isSessionExpired() {
+        const expiry = sessionStorage.getItem('sessionExpiry');
+        return expiry && Date.now() > parseInt(expiry, 10);
+    }
+
+    // Utility: set session expiry timestamp
+    function setSessionExpiry(seconds = 30) {
+        const expireAt = Date.now() + seconds * 1000;
+        sessionStorage.setItem('sessionExpiry', expireAt.toString());
+    }
+
+    // Clear session if expired
+    if (isSessionExpired()) {
+        console.log('Session expired — clearing sessionStorage');
         sessionStorage.clear();
-    }, 30000);
+    } else {
+        // Extend session each time script is reloaded or re-run
+        setSessionExpiry();
+    }
 
     // Initialize the script
     function init() {
@@ -25,10 +40,6 @@
             document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.dewi-online.nl;`;
             document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         });
-
-        // Clear HubSpot related localStorage items
-        localStorage.removeItem('hubspotutk');
-        localStorage.removeItem('hubspotapi');
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', setupEventListeners);
