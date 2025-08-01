@@ -208,26 +208,33 @@
     async function handleSubmit(event) {
         console.log('=== FINAL SUBMIT ===');
         console.log('Button classes:', event.target.className);
-        
-        const email = localStorage.getItem('userEmail');
+
+        let email = localStorage.getItem('userEmail');
         const storedActivities = JSON.parse(localStorage.getItem('selectedActivities') || '[]');
-        
+
         if (!email) {
-            console.log('No email found, returning');
-            return;
+            const emailField = document.getElementById('reservation_customer_form_email');
+            if (emailField && emailField.value.trim()) {
+                email = emailField.value.trim();
+                localStorage.setItem('userEmail', email);
+            } else {
+                console.log('No email found, returning');
+                return;
+            }
         }
 
-        // Check if the button has btn--next class
-        const isNextButton = event.target.classList.contains('btn--next');
-        console.log('Is next button:', isNextButton);
-
         try {
-            // Update HubSpot with final status
-            await updateHubSpotWithStoredData(!isNextButton);
+            // Always submit with final flag (this button only runs on final step)
+            await updateHubSpotWithStoredData(true);
         } catch (error) {
             console.error('Error submitting to HubSpot:', error);
         }
+
+        // ✅ This is the ONLY place we clear all localStorage
+        console.log('Clearing ALL localStorage after finalize step');
+        localStorage.clear();
     }
+
 
     // Handle payment form click
     async function handlePaymentFormClick() {
