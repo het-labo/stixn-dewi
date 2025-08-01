@@ -12,7 +12,7 @@
     }
 
     // Utility: set session expiry timestamp ONLY if not already set
-    function setSessionExpiryOnce(seconds = 30) {
+    function setSessionExpiryOnce(seconds = 60) {
         const expiry = sessionStorage.getItem('sessionExpiry');
         if (!expiry) {
             const expireAt = Date.now() + seconds * 1000;
