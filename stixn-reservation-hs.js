@@ -9,7 +9,7 @@
     setInterval(() => {
         console.log('Auto-clearing sessionStorage');
         sessionStorage.clear();
-    }, 60000);
+    }, 30000);
 
     // Initialize the script
     function init() {
