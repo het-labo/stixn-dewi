@@ -29,6 +29,24 @@
     }
 
     function setupEventListeners() {
+        // 🧼 Clean up if we just finished the final step
+        if (sessionStorage.getItem('clearOnNextLoad') === 'true') {
+            console.log('Detected final submit. Clearing sessionStorage and form fields...');
+            sessionStorage.clear();
+
+            const emailField = document.getElementById('reservation_customer_form_email');
+            if (emailField) emailField.value = '';
+
+            const nicknameField = document.getElementById('reservation_customer_form_nickname');
+            if (nicknameField) nicknameField.value = '';
+
+            const surnameField = document.getElementById('reservation_customer_form_surname');
+            if (surnameField) surnameField.value = '';
+
+            // Remove marker
+            sessionStorage.removeItem('clearOnNextLoad');
+        }
+
         const checkboxes = document.querySelectorAll('.js-filter');
         const storedActivities = JSON.parse(sessionStorage.getItem('selectedActivities') || '[]');
 
@@ -194,10 +212,10 @@
         try {
             await updateHubSpotWithStoredData(!isNextButton);
 
-            // ✅ Clear sessionStorage on final submission
+            // ✅ Set flag to clear on next load after final submission
             if (!isNextButton) {
-                console.log('Clearing sessionStorage after final step.');
-                sessionStorage.clear();
+                console.log('Final step detected. Will clear session on next page load.');
+                sessionStorage.setItem('clearOnNextLoad', 'true');
             }
 
         } catch (error) {
